@@ -1,33 +1,47 @@
-import React, { useState } from 'react';
-import Header from './components/Header';
-import ProductForm from './components/ProductForm';
-import OrderInfo from './components/OrderInfo';
+import React, { useState, useEffect } from 'react';
 import Cocktail from './components/Cocktail';
-import './App.css';
+import SearchForm from './components/SearchForm';
 
 function App() {
-  const products = [
-    { name: 'Product 1', price: 10 },
-    { name: 'Product 2', price: 20 },
-    { name: 'Product 3', price: 30 },
-  ];
+    const [cocktail, setCocktail] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
-  const [selectedProduct, setSelectedProduct] = useState(products[0]);
-  const [quantity, setQuantity] = useState(1);
+    useEffect(() => {
+        fetchRandomCocktail();
+    }, []);
 
-  const handleProductSelect = (productIndex, qty) => {
-    setSelectedProduct(products[productIndex]);
-    setQuantity(qty);
-  };
+    const fetchRandomCocktail = async () => {
+        const response = await fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php');
+        const data = await response.json();
+        setCocktail(data.drinks[0]);
+    };
 
-  return (
-    <div className="App">
-      <Header image="/logo192.png" title="Cocktail of the day" />
-      <ProductForm products={products} onProductSelect={handleProductSelect} />
-      <OrderInfo product={selectedProduct} quantity={quantity} />
-      <Cocktail /> {/* Uusi Cocktail-komponentti */}
-    </div>
-  );
+    const searchCocktail = async (term) => {
+        const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${term}`);
+        const data = await response.json();
+        setCocktail(data.drinks ? data.drinks[0] : null);
+    };
+
+    const handleSearch = (term) => {
+        setSearchTerm(term);
+        if (term) {
+            searchCocktail(term);
+        } else {
+            fetchRandomCocktail();
+        }
+    };
+
+    return (
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+            <h1>Cocktail Of The Day</h1>
+            <SearchForm onSearch={handleSearch} />
+            {cocktail ? (
+                <Cocktail cocktail={cocktail} />
+            ) : (
+                <p>No cocktail found.</p>
+            )}
+        </div>
+    );
 }
 
 export default App;
